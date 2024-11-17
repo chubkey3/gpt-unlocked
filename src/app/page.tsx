@@ -5,7 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import React from 'react';
 import 'katex/dist/katex.min.css';
-import MarkdownLaTeXRenderer from "./MarkdownLaTeXRenderer";
+import MarkdownLaTeXRenderer from "../components/ui/MarkdownLaTeXRenderer";
+import { Button, Flex, Heading, Image, Spinner, Text, Textarea } from "@chakra-ui/react";
             
 
 export default function Home() {
@@ -13,12 +14,20 @@ export default function Home() {
   const [file, setFile] = useState<File>();
   const [copiedImageURL, setCopiedImageURL] = useState('');
   const [prompt, setPrompt] = useState("");
+  const [loading, toggleLoading] = useState(false);
 
 
   const handleUpload = useCallback(() => {
     if (!file) {
+      alert('Please upload a file first.')
       return;
     }
+
+    if (loading) {
+      return;
+    }
+
+    toggleLoading(true);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -26,8 +35,9 @@ export default function Home() {
 
     axios.post('/api/prompt', formData).then((res) => {
       setData(res.data.data);
+      toggleLoading(false);
     })
-  }, [file, prompt])
+  }, [file, prompt, loading])
 
 
   const handleTransformDataTransferIntoURL = (
@@ -59,23 +69,48 @@ export default function Home() {
       document.removeEventListener('paste', handlePasteOnDocument)
     }
   })  
+
+  useEffect(() => {
+    const handleEnter = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        handleUpload();
+      }
+    }
+
+    document.addEventListener('keydown', handleEnter);
+
+    return () => {
+      document.removeEventListener('keydown', handleEnter);
+    }
+  }, [handleUpload])
              
   
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>      
-      <div className={styles.image}>
+    <Flex flexDir={'column'} alignItems={'center'} py={'50px'}>      
+      <Heading fontSize={'4xl'}>GPT Unlocked 🔓</Heading>
+      <Flex className={styles.image} mt={'10vh'} mb={'5vh'}>
         {copiedImageURL ? (
-          <img src={copiedImageURL}/>
+          <Image alt={'user uploaded image'} maxW={'70vw'} maxH={'50vh'} src={copiedImageURL}/>
         ) : (
-          <p>{'No image uploaded yet!'}</p>
+          <Flex flexDir={'column'} alignItems={'center'}>
+            <Heading>{'No image uploaded yet'}</Heading>
+            <Text>{'Paste in an image to get started!'}</Text>
+          </Flex>
         )}
-      </div>      
-      <p>Prompt (optional)</p>
-      <input placeholder="Can you solve this problem for me?" type="text" value={prompt} onChange={(e) => setPrompt(e.target.value)}/>
-      <button onClick={handleUpload}>Submit</button>            
-      <MarkdownLaTeXRenderer content={data}/>
-      </main>      
-    </div>
+      </Flex>   
+      <Flex flexDir={'column'}>
+        <Text>Prompt (optional)</Text>
+        <Textarea minW={'250px'} p={2} placeholder="Can you solve this problem for me?" value={prompt} onChange={(e) => setPrompt(e.target.value)}/>
+      </Flex>
+      <Button my={'20px'} minW={'250px'} size={'lg'} onClick={handleUpload}>Submit</Button>            
+      { (loading) ? (
+        <Spinner size={'xl'}/>
+      ) : (
+        <></>
+      )}   
+      <Flex maxW={'80%'} mt={'5vh'}>
+        <MarkdownLaTeXRenderer content={data}/>              
+      </Flex>
+    </Flex>
   );
 }

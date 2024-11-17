@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
         file = formData.get('file') as File;
         prompt = formData.get('prompt')?.toString() || process.env.DEFAULT_PROMPT || ""
         
-        let fileArrayBuffer = await file.arrayBuffer();
-        let fileBuffer = Buffer.from(fileArrayBuffer)
+        const fileArrayBuffer = await file.arrayBuffer();
+        const fileBuffer = Buffer.from(fileArrayBuffer)
         base64 = fileBuffer.toString('base64')        
         
     }  catch (error) {        

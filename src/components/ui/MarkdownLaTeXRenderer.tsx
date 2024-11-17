@@ -19,7 +19,7 @@ const MarkdownLaTeXRenderer = ({ content }: {content: string}) => {
         singleDollarTextMath: false,
     };
 
-    return (
+    return (        
         <ReactMarkdown
             className="markdown-content"
             children={processedText}
